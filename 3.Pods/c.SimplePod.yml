@@ -1,0 +1,17 @@
+#example command in docker
+# docker run -d --name nginx -p 80:80 nginx:latest
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    ports:
+    - containerPort: 80
+
+
+#how to run tis file
+#kubectl apply -f c.SimplePod.yml
