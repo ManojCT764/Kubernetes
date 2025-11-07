@@ -1,0 +1,95 @@
+Topic 4: Kubernetes Pods
+
+Understanding Pods
+Definition: A Pod is the smallest deployable unit in Kubernetes. It represents a single instance of a
+running process in your cluster.
+Key Concepts:
+Pod = Wrapper around one or more containers
+Containers in a pod share same network namespace (same IP)
+Containers in a pod share same storage volumes
+Containers in a pod are always co-located and co-scheduled
+Pods are ephemeral (temporary) - they can be created and destroyed
+
+Pod Architecture
+Single-Container Pod (Most Common - 90% of use cases):
+Pod: web-app
+IP Address: 10.244.1.5
+├── Container: nginx
+│
+├── Image: nginx:1.21
+│
+├── Port: 80
+│
+├── Resources: 256Mi RAM, 0.5CPU
+│
+└── Volume Mounts: /var/log
+
+Multi-Container Pod (Sidecar Pattern):
+Pod: app-with-logging
+IP Address: 10.244.1.6├── Main Container: web-app
+│
+├── Image: myapp:1.0
+│
+├── Port: 8080
+│
+└── Writes logs to: /var/log/app
+│
+├── Sidecar Container: log-collector
+│
+├── Image: fluentd:latest
+│
+├── Reads logs from: /var/log/app
+│
+└── Forwards to: Elasticsearch
+│
+└── Shared Volume: /var/log/app
+├── Type: emptyDir
+└── Mounted in both containers
+
+
+Pod Networking
+Key Networking Facts:
+1. Every pod gets unique IP address within cluster
+2. All containers in pod share same IP
+3. Containers communicate via localhost
+4. Pods communicate directly with other pods (no NAT)
+5. Pod IPs are ephemeral (change when pod recreated)
+Communication Examples:
+Within Same Pod:
+Pod: multi-container-app (IP: 10.244.1.5)
+├── Container A: nginx (port 80)
+└── Container B: app (port 3000)
+Container A → Container B:
+curl http://localhost:3000 ✅ Works!
+Both share same network namespace
+Between Different Pods:
+Pod A (IP: 10.244.1.5)
+→
+From Pod A:
+curl http://10.244.2.3:8080
+Pod B (IP: 10.244.2.3)
+✅ Works!
+Direct pod-to-pod communication
+No NAT neededPod Lifecycle Phases
+Phase Flow:
+Pod Lifecycle:
+1. PENDING
+├── Pod accepted by cluster
+├── Waiting for scheduling
+├── Image pulling
+└── Container creation in progress
+2. RUNNING
+├── Pod bound to node
+├── At least one container running
+└── Containers may be starting or restarting
+3. SUCCEEDED
+├── All containers terminated successfully
+├── Exit code 0
+└── Will not be restarted
+4. FAILED
+├── All containers terminated
+├── At least one failed (non-zero exit)
+└── May be restarted depending on policy
+5. UNKNOWN
+├── Cannot determine pod state
+└── Usually communication error with node
